@@ -6,6 +6,9 @@ import {useForm} from 'react-hook-form'
 import * as Yup from 'yup'
 import { yupResolver } from '@hookform/resolvers/yup';
 import { json } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
+import { useContext } from 'react'
+import { AccountContext } from './AccountContext'
 
 
 type UserForm = {
@@ -22,9 +25,12 @@ const validationSchema = Yup.object().shape({
     .required('Password is required')
 })
 function SignIn() {
+    const { setUser } = useContext(AccountContext)
     const {register, handleSubmit, formState:{errors, dirtyFields} } = useForm<UserForm>({
         resolver: yupResolver(validationSchema)
     })
+
+    const navigate = useNavigate()
     
     const onSubmit = async (data:UserForm) => {
         const login = await fetch('http://localhost:3000/auth/signIn', {
@@ -34,7 +40,10 @@ function SignIn() {
             headers:  {
                 "Content-Type": 'application/json' 
             },
-        }).then(res => res.json()).then(res => console.log(res))
+        }).then(res => res.json()).then(res => {
+            setUser({...res})
+            return navigate('/chat')
+        })
         .catch(err => console.log(err));
     }
     console.log(dirtyFields);

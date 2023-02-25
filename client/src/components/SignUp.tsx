@@ -3,6 +3,8 @@ import { Button, ButtonGroup, FormControl, FormErrorMessage, FormLabel, Heading,
 import { useForm } from 'react-hook-form'
 import * as Yup from 'yup'
 import { yupResolver } from '@hookform/resolvers/yup';
+import { useContext } from 'react';
+import {AccountContext} from './AccountContext';
 
 interface SignUpForm {
     username: string,
@@ -29,6 +31,7 @@ const signUpSchema = Yup.object().shape({
 })
 
 export default function SignUp() {
+    const { setUser } = useContext(AccountContext)
     const { register, handleSubmit, formState: { errors } } = useForm<SignUpForm>({
         resolver: yupResolver(signUpSchema)
     })
@@ -47,7 +50,7 @@ export default function SignUp() {
             if(res) {
                 return res.json()
             }
-        }).then(data => console.log(data))
+        }).then(data => setUser({...data}))
     }
 
     const checkInvalid = (input: keyof SignUpForm) => errors[input] ? true : false

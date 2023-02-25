@@ -12,7 +12,7 @@ const server = http.createServer(app)
 app.use(session({
     secret: 'a secret key',
     cookie: {
-        maxAge: 30000,
+        maxAge: 1000 * 60 * 60 * 24,
         httpOnly: true,
         sameSite: 'lax'
     },

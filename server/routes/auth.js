@@ -4,7 +4,14 @@ const pool = require('../db')
 const bcrypt = require('bcrypt')
 
 
-router.post('/signIn', async (req, res) => {
+router.route('/signIn').get(async (req, res) => {
+    console.log(req.session.user)
+    if(req.session.user && req.session.user.username) {
+        res.status(200).json({ loggedIn: true, username: req.session.user.username })
+    } else {
+        res.json({loggedIn:false , username: ''})
+    }
+}).post(async (req, res) => {
     const {username, password} = req.body
 
 
