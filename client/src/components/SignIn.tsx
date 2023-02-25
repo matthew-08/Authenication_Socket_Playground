@@ -5,6 +5,7 @@ import { VStack } from '@chakra-ui/react'
 import {useForm} from 'react-hook-form'
 import * as Yup from 'yup'
 import { yupResolver } from '@hookform/resolvers/yup';
+import { json } from 'react-router-dom'
 
 
 type UserForm = {
@@ -25,8 +26,16 @@ function SignIn() {
         resolver: yupResolver(validationSchema)
     })
     
-    const onSubmit = (data:UserForm) => {
-        console.log(data)
+    const onSubmit = async (data:UserForm) => {
+        const login = await fetch('http://localhost:3000/auth/signIn', {
+            method: 'POST',
+            credentials: 'include',
+            body: JSON.stringify(data),
+            headers:  {
+                "Content-Type": 'application/json' 
+            },
+        }).then(res => res.json()).then(res => console.log(res))
+        .catch(err => console.log(err));
     }
     console.log(dirtyFields);
 
