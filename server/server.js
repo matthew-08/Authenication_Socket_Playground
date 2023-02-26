@@ -5,9 +5,14 @@ const http = require('http')
 const session = require('express-session')
 require('dotenv').config()
 
+const RedisStore = require('connect-redis')(session)
+
 const app = express()
 
 const server = http.createServer(app)
+
+const redisClient = require('./redis')
+
 
 app.use(session({
     secret: 'a secret key',
@@ -18,6 +23,7 @@ app.use(session({
     },
     credentials: true,
     name: 'sid',
+    store: new RedisStore({ client: redisClient }),
     resave: false,
     saveUninitialized: false,
 }))

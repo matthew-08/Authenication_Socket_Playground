@@ -2,7 +2,7 @@ const router = require('express').Router()
 const formValidation = require('../middleware/formValidation')
 const pool = require('../db')
 const bcrypt = require('bcrypt')
-
+const rateLimiter = require('../controllers/rateLimiter')
 
 router.route('/signIn').get(async (req, res) => {
     console.log(req.session.user)
@@ -11,7 +11,7 @@ router.route('/signIn').get(async (req, res) => {
     } else {
         res.json({loggedIn:false , username: ''})
     }
-}).post(async (req, res) => {
+}).post(rateLimiter,async (req, res) => {
     const {username, password} = req.body
 
 
