@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom'
 type User = {
     loggedIn: null | boolean,
     username: string,
+    id: string,
 }
 
 type UserContextType = {
@@ -19,20 +20,20 @@ export const AccountContext = createContext<UserContextType>({} as UserContextTy
 
 
 const UserContext = ( { children }: { children: ReactNode } ) => {
-    const [user, setUser] = useState<User>({ loggedIn: null, username: '' })
+    const [user, setUser] = useState<User>({ loggedIn: null, username: '', id:''})
     const navigate = useNavigate()
     useEffect(() => {
         fetch('http://localhost:3000/auth/signIn', {
             credentials: 'include',
         }).then(res => {
             if (!res || !res.ok || res.status >= 400) {
-                return setUser({loggedIn: false, username: ''})
+                return setUser({loggedIn: false, username: '', id: ''})
             }
             return res.json()
         }).then((result:User) => {
             console.log(result)
             setUser({...result})
-            return navigate('/chat')
+            return navigate("/chat")
         })
     }, [])
 

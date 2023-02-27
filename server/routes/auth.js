@@ -7,7 +7,7 @@ const rateLimiter = require('../controllers/rateLimiter')
 router.route('/signIn').get(async (req, res) => {
     console.log(req.session.user)
     if(req.session.user && req.session.user.username) {
-        res.status(200).json({ loggedIn: true, username: req.session.user.username })
+        res.status(200).json({ loggedIn: true, username: req.session.user.username, id: req.session.user.id })
     } else {
         res.json({loggedIn:false , username: ''})
     }
@@ -15,7 +15,7 @@ router.route('/signIn').get(async (req, res) => {
     const {username, password} = req.body
 
 
-    const checkForUser = await pool.query('SELECT username, passhash FROM users WHERE username=$1' , [username])
+    const checkForUser = await pool.query('SELECT * FROM users WHERE username=$1', [username])
     
     if(checkForUser.rowCount === 0) {
         return res.status(402).json({loggedIn: false, status: 'no user found'})
@@ -26,9 +26,9 @@ router.route('/signIn').get(async (req, res) => {
     if(verifyPass) {
         req.session.user = {
             username: username,
-            id: 1
+            id: checkForUser.rows[0].id
         }
-        res.json({loggedIn: true, username})
+        res.json({loggedIn: true, username, id: checkForUser.rows[0].id})
     } else {
         res.status(402).json({loggedin: false, status: 'Incorrect password'})
     }
@@ -38,10 +38,13 @@ router.route('/signIn').get(async (req, res) => {
 
 router.post('/register', async  (req, res) => {
     const { username, email, password } = req.body
+
+    console.log(username);
     
     const existingUser = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
 
     if(existingUser.rowCount !== 0) {
+        console.log(existingUser.rows[0])
         return res.status(402).json({loggedIn: false, status: 'username taken' })
     }
     else {
