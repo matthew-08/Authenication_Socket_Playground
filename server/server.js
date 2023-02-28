@@ -32,11 +32,25 @@ io.engine.use(sessionMiddleware);
 io.use(authorizeMiddleware);
 app.use(sessionMiddleware)
 
-io.on('connect', socket => {
-    console.log(socket.user.id)
-    console.log(socket.rooms)
-    console.log(socket.request.session.user)
+io.on('connect', async socket => {
+    console.log('in io connect')
+    const ok = await redisClient.set(
+        `${socket.request.session.user.id}`, 'connected', 'EX', 1000,
+    )
+    const hello = await redisClient.ttl(`${socket.request.session.user.id}`).then(res => console.log(res))
+
+    
+    socket.on('disconnect', async () => {
+        const userId = socket.request.session.user.id
+        await redisClient.del(`${userId}`, 'connected').then(res => console.log(res));
+    })
+
+    socket.on('private_chat', async (data) => {
+        console.log(data.message + 'private');
+    })
 })
+
+
 
 
 
