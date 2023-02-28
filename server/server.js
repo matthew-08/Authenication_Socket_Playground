@@ -35,7 +35,7 @@ app.use(sessionMiddleware)
 io.on('connect', async socket => {
     console.log('in io connect')
     const ok = await redisClient.set(
-        `${socket.request.session.user.id}`, 'connected', 'EX', 1000,
+        `${socket.request.session.user.id}`, `${socket.id}`, 'EX', 1000,
     )
     const hello = await redisClient.ttl(`${socket.request.session.user.id}`).then(res => console.log(res))
 
@@ -46,7 +46,11 @@ io.on('connect', async socket => {
     })
 
     socket.on('private_chat', async (data) => {
-        console.log(data.message + 'private');
+        console.log('check')
+        const userSocket = await redisClient.get(data.to)
+        if(userSocket) {
+           io.to(userSocket).emit('chat_message', data.message)
+        }
     })
 })
 

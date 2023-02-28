@@ -3,66 +3,74 @@ const pool = require('../db')
 const redisClient = require('../redis')
 
 
-router.post('/add', async (req, res) => {
-    const { username } = req.body
-    const userId = req.session.user.id
-    const checkForUser = await pool.query('SELECT username, id FROM USERS WHERE username = $1', [username])
+router.post('/sendMessage', async (req, res) => {
+    const { sender, recipient, date, content, conversationId } = req.body
 
-    if(checkForUser.rowCount === 0 || !checkForUser.rowCount) {
-        return res.status(402).json({errorMsg: 'User doesn\'t exist'})
+    // 
+    if(conversationId) {
+        // If there's a conversation id that we've already sent to the front end.
+        // go ahead and just insert the into the database.
+        const insertMessage = await pool.query('INSERT INTO message (conversation, sender, content, time) VALUES($1, $2, $3, $4)', [conversationId, sender, content, date])
+        return res.json(insertMessage);
     }
-    const requestedUserId = checkForUser.rows[0].id
+   
 
-    const checkForExistingFriendship = await pool.query(
-    `SELECT * FROM friend_connection 
-    WHERE userId1 = $1 and userId2 = $2
-    UNION
-    SELECT * FROM friend_connection
-    WHERE userId1 = $2 and userID2 = $1
-    `, [requestedUserId, userId])
+    //we don't have an existing conversation between these two users/
+    // Create a new conversation with the recipient and sender
+    const createNewConversation = await pool.query('INSERT INTO conversation (userId1, userId2) VALUES($1, $2) RETURNING id', [sender, recipient])
     
+    const returnedConvoId = createNewConversation.rows[0].id
 
-    if(checkForExistingFriendship.rowCount !== 0) {
-        return res.status(402).json({errorMsg:'You are already friends with this user'})
-    }
 
-    const addFriend = await pool.query('INSERT INTO friend_connection (userId1, userId2) VALUES($1, $2)', [userId, requestedUserId])
+    // we created a new conversation, now we'll need to insert thse message into the conversation
+     const createNewMessage = await pool.query('INSERT INTO message (conversation, sender, content, time) VALUES($1, $2, $3, $4)', [returnedConvoId, sender, content, date])
+
     
-    const friendAdded = checkForUser.rows[0]
-    const userOnline = await redisClient.exists(friendAdded.id)
-    if(userOnline) {
-        friendAdded.online = true
-    }
-    return res.status(200).json(friendAdded)
+    return res.status(200).json(createNewMessage)
 })
 
-router.get('/friendsList/:id', async (req, res) => {
+router.get('/converstionList/:id', async (req, res) => {
     const { id: userId } = req.params;
 
-    const getAllUsers = await pool.query(
-        `SELECT users.id, users.username FROM friend_connection
-         JOIN users ON friend_connection.userId2=users.id WHERE friend_connection.userId1 = $1
+    const getAllConvoId = await pool.query(
+        `SELECT users.id, users.username, conversation.id AS conversation_id FROM conversation
+         JOIN users ON conversation.userId2=users.id WHERE conversation.userId1 = $1
          UNION
-         SELECT users.id, users.username FROM friend_connection
-         JOIN users ON friend_connection.userId1=users.id WHERE friend_connection.userId2 = $1
+         SELECT users.id, users.username, conversation.id FROM conversation
+         JOIN users ON conversation.userId1=users.id WHERE conversation.userId2 = $1
         `, [userId]
     )
-    const result = await (getAllUsers.rows)
+    const result = await (getAllConvoId.rows)
+    return res.json(result)
+})
 
-    for (const friend of result) {
-        const { id } = friend
-        const exists = await redisClient.exists(id)
-        if(exists) {
-            friend.online = true
+router.get('/conversation/:id', async(req, res) => {
+    const { id: conversationId } = req.params
+
+    const getConversation = await pool.query(`
+    SELECT * FROM message WHERE conversation = $1
+    `, [conversationId]);
+
+    return res.json(getConversation.rows);
+
+})
+
+router.get('/users', async(req, res) => {
+    const getAllUsers = await pool.query('SELECT username, id FROM users')
+
+    const allUsers = getAllUsers.rows
+
+    for(const user of allUsers) {
+        const { id: userId } = user
+        const checkOnline = await redisClient.exists(`${userId}`)
+        if(checkOnline) {
+            user.online = true
         }
         else {
-            friend.online = false
+            user.online = false
         }
     }
-    console.log(result);
-
-
-    return res.status(200).json({result})
+    return res.json(allUsers);
 })
 
 module.exports = router
