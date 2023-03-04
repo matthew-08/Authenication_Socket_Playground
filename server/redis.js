@@ -1,3 +1,4 @@
+//@ts-nocheck
 const Redis = require('ioredis');
 
 const redisClient = new Redis();

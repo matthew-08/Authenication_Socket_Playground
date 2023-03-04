@@ -11,6 +11,10 @@ const {user, setUser} = useContext(AccountContext)
     socket.on('connect_error', () => {
         setUser({...user, loggedIn: false})
     })
+
+    socket.on('users', (users) => {
+      console.log(users);
+    })
     
     return () => {
         socket.off('connect_error')

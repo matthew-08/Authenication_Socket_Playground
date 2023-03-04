@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import reactLogo from './assets/react.svg'
 import './App.css'
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom'
@@ -15,12 +15,12 @@ import { AccountContext } from './components/AccountContext'
 
 function App() {
   const [count, setCount] = useState(0)
-  
   const {user} = useContext(AccountContext)
+  console.log(user);
 
   return (
     <Router>
-      <UserContext>
+    <UserContext>
     <div className="App">
     <Link to='/profile'>Proteced route</Link>
       <ToggleColorMode/>

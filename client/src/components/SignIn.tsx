@@ -26,7 +26,7 @@ const validationSchema = Yup.object().shape({
 })
 function SignIn() {
     const { setUser } = useContext(AccountContext)
-    const {register, handleSubmit, formState:{errors, dirtyFields} } = useForm<UserForm>({
+    const {register, setError, handleSubmit, formState:{errors, dirtyFields} } = useForm<UserForm>({
         resolver: yupResolver(validationSchema)
     })
 

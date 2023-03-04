@@ -31,9 +31,10 @@ const UserContext = ( { children }: { children: ReactNode } ) => {
             }
             return res.json()
         }).then((result:User) => {
-            console.log(result)
             setUser({...result})
-            return navigate("/chat")
+            if(result.loggedIn) {
+                navigate('/chat')
+            }
         })
     }, [])
 

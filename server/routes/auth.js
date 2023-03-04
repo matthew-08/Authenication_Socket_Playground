@@ -6,6 +6,7 @@ const rateLimiter = require('../controllers/rateLimiter')
 
 router.route('/signIn').get(async (req, res) => {
     if(req.session.user && req.session.user.username) {
+        console.log(req.session.user);
         res.status(200).json({ loggedIn: true, username: req.session.user.username, id: req.session.user.id })
     } else {
         res.json({loggedIn:false , username: ''})

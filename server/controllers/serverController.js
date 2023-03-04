@@ -17,8 +17,4 @@ const sessionMiddleware = session({
     saveUninitialized: false,
 })
 
-const wrap = (expressMiddleware) => {
-    (socket, next) => expressMiddleware(socket.request, {}, next)
-}
-
 module.exports = { sessionMiddleware }

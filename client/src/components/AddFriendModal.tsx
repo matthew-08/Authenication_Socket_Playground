@@ -4,6 +4,9 @@ import { useForm } from 'react-hook-form'
 import { string } from 'yup'
 import { yupResolver } from '@hookform/resolvers/yup'
 import * as Yup from 'yup'
+import socket from '../socket'
+import { useContext } from 'react'
+import { FriendContext } from './Chat'
 
 type AddFriendForm = {
   username: string
@@ -20,8 +23,9 @@ export const AddFriendModal = ({onOpen, onClose, isOpen}) => {
     resolver: yupResolver(formSchema)
   })
 
+  const { friendList,  setFriendList } = useContext(FriendContext)
   const onSubmit = async (data:AddFriendForm) => {
-      try {
+       try {
         const addUser = await fetch("http://localhost:3000/friends/add", {
           headers: {
             "Content-Type": 'application/json' 
@@ -42,12 +46,17 @@ export const AddFriendModal = ({onOpen, onClose, isOpen}) => {
             reset({
               username: '',
             })
+            res.json().then(res => {
+              console.log(res);
+              setFriendList([...friendList, res])
+            })
             onClose();
           }
         })
       } catch (error) {
         console.log(error);
-      }
+      } 
+     
   }
   
 

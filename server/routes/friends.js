@@ -29,7 +29,7 @@ router.post('/sendMessage', async (req, res) => {
     return res.status(200).json(createNewMessage)
 })
 
-router.get('/converstionList/:id', async (req, res) => {
+router.get('/conversationList/:id', async (req, res) => {
     const { id: userId } = req.params;
 
     const getAllConvoId = await pool.query(
@@ -72,5 +72,25 @@ router.get('/users', async(req, res) => {
     }
     return res.json(allUsers);
 })
+
+router.get('/latestMessage/:id', async(req, res) => {
+    const {id: conversationId} = req.params
+    const mostRecentMessage = await pool.query('SELECT * from message WHERE conversation = $1 ORDER BY time DESC LIMIT 1', [conversationId])
+    return res.json(mostRecentMessage.rows[0])
+})
+
+router.post('/newMessage/', async (req, res) => {
+    console.log(req.body);
+    const {
+        sender,
+        time,
+        content,
+        conversationId,
+
+    } = req.body
+
+    const insertMessage = await pool.query('INSERT INTO message(conversation, sender, content, time) VALUES($1, $2, $3, $4)', [conversationId, sender, content, time])
+    return res.status(200);
+})  
 
 module.exports = router
